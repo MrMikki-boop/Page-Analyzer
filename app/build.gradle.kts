@@ -4,7 +4,7 @@ plugins {
     id("application")
 
     id("checkstyle")
-    jacoco
+    id("jacoco")
 
     id("com.github.johnrengelman.shadow") version "8.1.1"
 
@@ -40,13 +40,23 @@ tasks.withType<JavaExec> {
 
 jacoco {
     toolVersion = "0.8.9"
-    reportsDirectory = layout.buildDirectory.dir("customJacocoReportDir")
+    reportsDirectory.set(layout.buildDirectory.dir("customJacocoReportDir"))
+}
+
+tasks.test {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.withType<Test> {
+    finalizedBy(tasks.jacocoTestReport)
 }
 
 tasks.jacocoTestReport {
     reports {
-        xml.required = false
-        csv.required = false
+        xml.required.set(true)
+        csv.required.set(true)
+        html.required.set(true)
         html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
     }
 }
