@@ -4,7 +4,7 @@ plugins {
     id("application")
 
     id("checkstyle")
-    id("jacoco")
+    jacoco
 
     id("com.github.johnrengelman.shadow") version "8.1.1"
 
@@ -35,19 +35,18 @@ dependencies {
 }
 
 tasks.withType<JavaExec> {
-    environment("PORT", "7000") // Установите порт по умолчанию
+    environment("PORT", "7070") // Установите порт по умолчанию
 }
 
 jacoco {
     toolVersion = "0.8.9"
-    reportsDirectory.set(layout.buildDirectory.dir("customJacocoReportDir"))
+    reportsDirectory = layout.buildDirectory.dir("customJacocoReportDir")
 }
 
 tasks.jacocoTestReport {
     reports {
-        xml.required.set(true)
-        csv.required.set(true)
-        html.required.set(true)
+        xml.required = false
+        csv.required = false
         html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
     }
 }
