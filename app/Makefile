@@ -8,7 +8,7 @@ build: # Build app
 	./gradlew installDist
 
 report:
-		./gradlew jacocoTestReport
+		./gradlew jacocoTestReport jacocoTestCoverageVerification
 
 run-dist: # Run app
 		./build/install/app/bin/app
