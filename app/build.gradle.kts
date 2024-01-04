@@ -2,8 +2,10 @@ plugins {
     id("java")
 
     id("application")
+
     id("checkstyle")
     id("jacoco")
+
     id("com.github.johnrengelman.shadow") version "8.1.1"
 
     id("se.patrikerdes.use-latest-versions") version "0.2.18"
@@ -34,4 +36,22 @@ dependencies {
 
 tasks.withType<JavaExec> {
     environment("PORT", "7000") // Установите порт по умолчанию
+}
+
+jacoco {
+    toolVersion = "0.8.9"
+    reportsDirectory.set(layout.buildDirectory.dir("customJacocoReportDir"))
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        csv.required.set(true)
+        html.required.set(true)
+        html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
+    }
+}
+
+checkstyle {
+    toolVersion = "10.2"
 }
