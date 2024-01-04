@@ -38,11 +38,6 @@ tasks.withType<JavaExec> {
     environment("PORT", "7070") // Установите порт по умолчанию
 }
 
-jacoco {
-    toolVersion = "0.8.9"
-    reportsDirectory.set(layout.buildDirectory.dir("customJacocoReportDir"))
-}
-
 tasks.test {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
@@ -57,7 +52,6 @@ tasks.jacocoTestReport {
         xml.required.set(true)
         csv.required.set(true)
         html.required.set(true)
-        html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
     }
 }
 
