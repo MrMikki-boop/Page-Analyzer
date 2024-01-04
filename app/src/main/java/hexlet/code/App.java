@@ -2,26 +2,16 @@ package hexlet.code;
 
 import io.javalin.Javalin;
 
-
-
-public final class App {
-    public static void main(String[] args) {
-        Javalin app = getApp();
-        app.start(8080);
-    }
-
-    private static Javalin getApp() {
-
-        Javalin app = Javalin.create(config -> {
-            config.plugins.enableDevLogging();
+public class App {
+    public static Javalin getApp() {
+        var app = Javalin.create(config -> {
+            config.bundledPlugins.enableDevLogging();
         });
-
-        app.get("/", ctx -> {
-            ctx.result("Hello World");
-        });
-
+        app.get("/", ctx -> ctx.result("Hello World"));
         return app;
-
     }
 
+    public static void main(String[] args) {
+        getApp().start();
+    }
 }
