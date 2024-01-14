@@ -3,7 +3,6 @@ package hexlet.code;
 import io.javalin.Javalin;
 
 import java.sql.Connection;
-import java.sql.ConnectionBuilder;
 
 import static io.javalin.Javalin.create;
 
@@ -37,5 +36,4 @@ public class App {
         }
         app.start(7070);
     }
-
 }
