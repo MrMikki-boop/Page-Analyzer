@@ -6,29 +6,29 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 
 public class DatabaseConfig {
-    private static final HikariConfig Config = new HikariConfig();
+    private static final HikariConfig CONFIG = new HikariConfig();
 
     static {
         // Задаем максимальное количество соединений в пуле
-        Config.setMaximumPoolSize(10);
+        CONFIG.setMaximumPoolSize(10);
         // Задаем таймаут на установку соединения с базой данных
-        Config.setConnectionTimeout(5000);
+        CONFIG.setConnectionTimeout(5000);
         // Задаем время ожидания неактивных соединений перед закрытием
-        Config.setIdleTimeout(600000);
+        CONFIG.setIdleTimeout(600000);
         // Задаем максимальное время жизни соединения в пуле
-        Config.setMaxLifetime(1800000);
+        CONFIG.setMaxLifetime(1800000);
     }
 
     public static HikariDataSource getDataSource() {
         if (System.getenv("JDBC_DATABASE_URL") != null) {
             // Если переменная окружения JDBC_DATABASE_URL установлена, используем ее значение (подходит для продакшена)
-            Config.setJdbcUrl(System.getenv("JDBC_DATABASE_URL"));
+            CONFIG.setJdbcUrl(System.getenv("JDBC_DATABASE_URL"));
         } else {
             // В противном случае (например, в локальной среде разработки) используем встроенную базу данных H2
-            Config.setJdbcUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
-            Config.setDriverClassName("org.h2.Driver");
+            CONFIG.setJdbcUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
+            CONFIG.setDriverClassName("org.h2.Driver");
         }
-        return new HikariDataSource(Config);
+        return new HikariDataSource(CONFIG);
     }
 
     public static Connection getConnection() throws Exception {
