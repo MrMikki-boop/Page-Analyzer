@@ -35,7 +35,6 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.1.0-alpha1")
     implementation("io.javalin:javalin-rendering:5.6.3")
     implementation("gg.jte:jte:3.1.6")
-    implementation("io.javalin:javalin-jte:6.0.0-beta.4")
     implementation("io.javalin:javalin-jte:1.3.7")
 }
 
