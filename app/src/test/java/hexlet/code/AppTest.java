@@ -1,17 +1,21 @@
 package hexlet.code;
 
 import io.javalin.Javalin;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
-class AppTest {
+public class AppTest {
 
-    @Test
-    void testApp() {
-        Javalin app = App.getApp();
+    private static Javalin app;
 
-        // Добавьте свои тесты здесь
-        assertNotNull(app);
-        // Например, можно добавить тесты для проверки конфигурации приложения или маршрутов
+    @BeforeAll
+    public static void setup() {
+        app = App.getApp();
+        app.start(7070);
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        app.stop();
     }
 }
