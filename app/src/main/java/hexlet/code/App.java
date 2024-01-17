@@ -68,11 +68,11 @@ public class App {
             // Initialize database structure
             // You can use something like Flyway or Liquibase for more complex setups
             connection.createStatement().execute(
-                    "CREATE TABLE IF NOT EXISTS urls (" +
-                            "id SERIAL PRIMARY KEY," +
-                            "name VARCHAR(255) NOT NULL," +
-                            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-                            ")"
+                    "CREATE TABLE IF NOT EXISTS urls ("
+                            + "id SERIAL PRIMARY KEY,"
+                            + "name VARCHAR(255) NOT NULL,"
+                            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                            + ")"
             );
         } catch (Exception e) {
             e.printStackTrace();
