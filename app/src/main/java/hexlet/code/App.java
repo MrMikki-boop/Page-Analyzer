@@ -8,8 +8,6 @@ import io.javalin.rendering.template.JavalinJte;
 
 import java.net.URI;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.Timestamp;
 import java.util.List;
 
 import static io.javalin.Javalin.create;
@@ -36,7 +34,9 @@ public class App {
             String inputUrl = ctx.formParam("url");
             try {
                 URI uri = new URI(inputUrl);
-                String baseUrl = uri.getScheme() + "://" + uri.getHost() + (uri.getPort() != -1 ? ":" + uri.getPort() : "");
+                String baseUrl = uri.getScheme() + "://"
+                        + uri.getHost()
+                        + (uri.getPort() != -1 ? ":" + uri.getPort() : "");
                 Url url = new Url();
                 url.setName(baseUrl);
                 new UrlRepository().save(url);
