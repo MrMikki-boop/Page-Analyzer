@@ -35,7 +35,7 @@ public final class App {
 
     public static int getPort() {
         String port = System.getenv().getOrDefault("PORT", PORT_DEFAULT);
-        return Integer.parseInt(port);
+        return Integer.valueOf(port);
     }
 
     public static String getJdbcUrl() {
@@ -60,10 +60,11 @@ public final class App {
     private static TemplateEngine createTemplateEngine() {
         ClassLoader classLoader = App.class.getClassLoader();
         ResourceCodeResolver codeResolver = new ResourceCodeResolver("templates", classLoader);
-        return TemplateEngine.create(codeResolver, ContentType.Html);
+        TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Html);
+        return templateEngine;
     }
 
-    public static Javalin getApp() throws SQLException {
+    public static Javalin getApp() throws IOException, SQLException {
 
         var hikariConfig = new HikariConfig();
         setData(hikariConfig);
@@ -71,7 +72,6 @@ public final class App {
         var dataSource = new HikariDataSource(hikariConfig);
 
         var inputStream = App.class.getClassLoader().getResourceAsStream("schema.sql");
-        assert inputStream != null;
         var reader = new BufferedReader(new InputStreamReader(inputStream));
         var sql = reader.lines().collect(Collectors.joining("\n"));
 
@@ -82,7 +82,9 @@ public final class App {
         }
         BaseRepository.dataSource = dataSource;
 
-        var app = Javalin.create(config -> config.plugins.enableDevLogging());
+        var app = Javalin.create(config -> {
+            config.plugins.enableDevLogging();
+        });
 
         JavalinJte.init(createTemplateEngine());
 
