@@ -2,84 +2,97 @@ package hexlet.code.repository;
 
 import hexlet.code.model.Url;
 
+import java.util.Date;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public final class UrlRepository extends BaseRepository {
+public class UrlRepository extends BaseRepository {
+
     public static void save(Url url) throws SQLException {
         String sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, url.getName());
-            stmt.setTimestamp(2, url.getCreatedAt());
-            stmt.executeUpdate();
-
-            var generatedKeys = stmt.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                url.setId(generatedKeys.getLong(1));
-            } else {
-                throw new SQLException("DB have not returned an id after saving an entity");
-            }
+        try (var connection = dataSource.getConnection();
+             var preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, url.getName());
+            var createdAt = new Timestamp(new Date().getTime());
+            preparedStatement.setTimestamp(2, createdAt);
+            preparedStatement.executeUpdate();
         }
     }
 
-    public static Optional<Url> find(Long id) throws SQLException {
-        var sql = "SELECT * FROM urls WHERE id = ?";
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, id);
-            var resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                var name = resultSet.getString("name");
-                var createdAt = resultSet.getTimestamp("created_at");
-                var url = new Url(name, createdAt);
-                url.setId(id);
-                return Optional.of(url);
-            }
-            return Optional.empty();
+    public static boolean checkUrlExist(String url) throws SQLException {
+        String sql = "SELECT * FROM urls WHERE name = ?";
+        try (var connection = dataSource.getConnection();
+             var preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, url);
+            var resultSet = preparedStatement.executeQuery();
+            return resultSet.next();
         }
     }
 
-    public static List<Url> getEntities() throws SQLException {
-        var sql = "SELECT * FROM urls";
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement(sql)) {
-            var resultSet = stmt.executeQuery();
+    public static List<Url> findAll() throws SQLException {
+        String sql = "SELECT * FROM urls";
+        try (var connection = dataSource.getConnection();
+             var preparedStatement = connection.prepareStatement(sql)) {
+            var resultSet = preparedStatement.executeQuery();
             var result = new ArrayList<Url>();
-
             while (resultSet.next()) {
                 var id = resultSet.getLong("id");
                 var name = resultSet.getString("name");
                 var createdAt = resultSet.getTimestamp("created_at");
-                var url = new Url(name, createdAt);
+                var url = new Url(name);
                 url.setId(id);
+                url.setCreatedAt(createdAt);
                 result.add(url);
             }
             return result;
         }
     }
 
-    public static Url findByName(String name) throws SQLException {
-        var sql = "SELECT * FROM urls WHERE name = ?";
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, name);
-            var resultSet = stmt.executeQuery();
+    public static Optional<Url> find(long id) throws SQLException {
+        String sql = "SELECT * FROM urls WHERE id = ?";
+        try (var connection = dataSource.getConnection();
+             var preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setLong(1, id);
+            var resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
+                var name = resultSet.getString("name");
                 var createdAt = resultSet.getTimestamp("created_at");
-                var id = resultSet.getLong("id");
-                var url = new Url(name, createdAt);
+                var url = new Url(name);
                 url.setId(id);
-                return url;
+                url.setCreatedAt(createdAt);
+                return Optional.of(url);
             }
-            return null;
+            return Optional.empty();
         }
     }
 
-    public static boolean doesUrlExist(String name) throws SQLException {
-        return findByName(name) != null;
+    public static Optional<Url> findByName(String name) throws SQLException {
+        String sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
+        try (var connection = dataSource.getConnection();
+             var preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, name);
+            var resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                var id = resultSet.getLong("id");
+                var createdAt = resultSet.getTimestamp("created_at");
+                var url = new Url(name);
+                url.setId(id);
+                url.setCreatedAt(createdAt);
+                return Optional.of(url);
+            }
+            return Optional.empty();
+        }
+    }
+
+    public static void destroy(long id) throws SQLException {
+        String sql = "DELETE FROM urls WHERE id = ?";
+        try (var connection = dataSource.getConnection();
+             var preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate();
+        }
     }
 }
