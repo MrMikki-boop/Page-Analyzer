@@ -1,6 +1,6 @@
 FROM eclipse-temurin:20-jdk
 
-ARG GRADLE_VERSION=8.2
+ARG GRADLE_VERSION=8.3
 
 RUN apt-get update && apt-get install -yq unzip
 
@@ -20,4 +20,4 @@ COPY /app .
 
 RUN gradle installDist
 
-CMD ./build/install/java-javalin-blog/bin/java-javalin-blog
+CMD ./build/install/app/bin/app
