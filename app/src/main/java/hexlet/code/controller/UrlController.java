@@ -28,7 +28,7 @@ public class UrlController {
         try {
             url = new URL(receivedUrl);
         } catch (MalformedURLException e) {
-            ctx.sessionAttribute("flash", "Некорректный URL");
+            ctx.sessionAttribute("flash", "Invalid URL");
             ctx.sessionAttribute("flashType", "alert-danger");
             ctx.redirect(NamedRoutes.rootPath());
             return;
@@ -36,7 +36,7 @@ public class UrlController {
         String name = String.format("%s://%s", url.getProtocol(), url.getAuthority());
 
         if (UrlRepository.checkUrlExist(name)) {
-            ctx.sessionAttribute("flash", "Страница уже существует");
+            ctx.sessionAttribute("flash", "Page already exists");
             ctx.sessionAttribute("flashType", "alert-danger");
             ctx.redirect(NamedRoutes.rootPath());
             return;
@@ -44,7 +44,7 @@ public class UrlController {
 
         Url newUrl = new Url(name);
         UrlRepository.save(newUrl);
-        ctx.sessionAttribute("flash", "Страница успешно добавлена");
+        ctx.sessionAttribute("flash", "Page successfully added");
         ctx.sessionAttribute("flashType", "alert-success");
         ctx.redirect(NamedRoutes.urlsPath());
     };
@@ -87,10 +87,10 @@ public class UrlController {
             urlCheck.setUrlId(urlId);
             UrlCheckRepository.save(urlCheck);
 
-            ctx.sessionAttribute("flash", "Страница успешно проверена");
+            ctx.sessionAttribute("flash", "Page successfully checked");
             ctx.sessionAttribute("flashType", "alert-success");
         } catch (UnirestException e) {
-            ctx.sessionAttribute("flash", "Connect to " + url + " failed");
+            ctx.sessionAttribute("flash", "Connection to " + url + " failed");
             ctx.sessionAttribute("flashType", "alert-danger");
             ctx.redirect(NamedRoutes.urlPath(urlId));
         } catch (Exception e) {
