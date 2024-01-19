@@ -51,13 +51,27 @@ public class UrlRepository extends BaseRepository {
         }
     }
 
-    public static Optional<Url> find(long id) throws SQLException {
-        String sql = "SELECT * FROM urls WHERE id = ?";
+    public static Optional<Url> findByCriterion(String criterion, Object value) throws SQLException {
+        String sql;
+        if ("id".equals(criterion)) {
+            sql = "SELECT * FROM urls WHERE id = ?";
+        } else if ("name".equals(criterion)) {
+            sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
+        } else {
+            throw new IllegalArgumentException("Invalid criterion: " + criterion);
+        }
+
         try (var connection = dataSource.getConnection();
              var preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setLong(1, id);
+            if ("id".equals(criterion)) {
+                preparedStatement.setLong(1, (Long) value);
+            } else if ("name".equals(criterion)) {
+                preparedStatement.setString(1, (String) value);
+            }
+
             var resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
+                var id = resultSet.getLong("id");
                 var name = resultSet.getString("name");
                 var createdAt = resultSet.getTimestamp("created_at");
                 var url = new Url(name);
@@ -69,22 +83,12 @@ public class UrlRepository extends BaseRepository {
         }
     }
 
+    public static Optional<Url> find(long id) throws SQLException {
+        return findByCriterion("id", id);
+    }
+
     public static Optional<Url> findByName(String name) throws SQLException {
-        String sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
-        try (var connection = dataSource.getConnection();
-             var preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setString(1, name);
-            var resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                var id = resultSet.getLong("id");
-                var createdAt = resultSet.getTimestamp("created_at");
-                var url = new Url(name);
-                url.setId(id);
-                url.setCreatedAt(createdAt);
-                return Optional.of(url);
-            }
-            return Optional.empty();
-        }
+        return findByCriterion("name", name);
     }
 
     public static void destroy(long id) throws SQLException {
