@@ -48,7 +48,7 @@ public class AppTest {
             assertThat(response.code()).isEqualTo(200);
             assert response.body() != null;
             assertThat(response.body().string())
-                    .contains("<p class=\"lead\">Бесплатно проверяйте сайты на SEO пригодность</p>");
+                    .contains("<p class=\"lead\">Check websites for SEO suitability for free</p>");
         }));
     }
 
@@ -58,7 +58,7 @@ public class AppTest {
             var response = client.get("/urls");
             assertThat(response.code()).isEqualTo(200);
             assert response.body() != null;
-            assertThat(response.body().string()).contains("Сайты");
+            assertThat(response.body().string()).contains("Urls");
         }));
     }
 
@@ -132,7 +132,7 @@ public class AppTest {
             var response2 = client.post("/urls", "url=" + TEST_URL + "/12345");
             assertThat(response2.code()).isEqualTo(200);
             assertThat(response2.body().string())
-                    .contains("<a class=\"navbar-brand\" href=\"/\">Анализатор страниц</a>");
+                    .contains("<a class=\"navbar-brand\" href=\"/\">Page Analyzer</a>");
             assertThat(UrlRepository.checkUrlExist(TEST_URL)).isTrue();
         });
     }
