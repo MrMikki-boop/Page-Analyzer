@@ -1,60 +1,79 @@
 package hexlet.code;
 
-import gg.jte.ContentType;
-import gg.jte.TemplateEngine;
-import gg.jte.resolve.ResourceCodeResolver;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
 import hexlet.code.controller.RootController;
-import hexlet.code.controller.UrlCheckController;
 import hexlet.code.controller.UrlController;
 import hexlet.code.repository.BaseRepository;
-
 import hexlet.code.util.NamedRoutes;
-import io.javalin.rendering.template.JavalinJte;
+import io.javalin.Javalin;
 import lombok.extern.slf4j.Slf4j;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import io.javalin.Javalin;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import org.postgresql.Driver;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
+import gg.jte.ContentType;
+import gg.jte.TemplateEngine;
+import io.javalin.rendering.template.JavalinJte;
+import gg.jte.resolve.ResourceCodeResolver;
+
 @Slf4j
-public final class App {
+public class App {
 
-    private static final String PORT_DEFAULT = "7070";
-    private static final String JDBC_URL_DEFAULT = "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;";
-
-    public static void main(String[] args) throws IOException, SQLException {
-        Javalin app = getApp();
-        var port = getPort();
-        app.start(port);
-    }
-
-    public static int getPort() {
-        String port = System.getenv().getOrDefault("PORT", PORT_DEFAULT);
+    private static int getPort() {
+        String port = System.getenv().getOrDefault("PORT", "7070");
         return Integer.valueOf(port);
     }
 
-    public static String getJdbcUrl() {
-        return System.getenv().getOrDefault("JDBC_DATABASE_URL", JDBC_URL_DEFAULT);
+    private static InputStream getFile(String fileName) {
+        var classLoader = App.class.getClassLoader();
+        var inputStream = classLoader.getResourceAsStream(fileName);
+        return inputStream;
     }
 
-    public static boolean isProduction() {
-        return System.getenv().getOrDefault("APP_ENV", "dev").equals("prod");
-    }
-
-    public static void setData(HikariConfig hikariConfig) {
-        hikariConfig.setJdbcUrl(getJdbcUrl());
-
-        if (isProduction()) {
-            var username = System.getenv("JDBC_DATABASE_USERNAME");
-            var password = System.getenv("JDBC_DATABASE_PASSWORD");
-            hikariConfig.setUsername(username);
-            hikariConfig.setPassword(password);
+    private static String getContent(InputStream is) throws IOException {
+        try (var reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            return reader.lines().collect(Collectors.joining(System.lineSeparator()));
         }
+    }
+
+    public static Javalin getApp() throws IOException, SQLException {
+        var hikariConfig = new HikariConfig();
+        String jbcUrl = "jdbc:h2:mem:piafson;DB_CLOSE_DELAY=-1;";
+        if (System.getenv("JDBC_DATABASE_URL") != null) {
+            hikariConfig.setDriverClassName(Driver.class.getCanonicalName());
+            jbcUrl = System.getenv("JDBC_DATABASE_URL");
+            hikariConfig.setUsername(System.getenv("JDBC_DATABASE_USERNAME"));
+            hikariConfig.setPassword(System.getenv("JDBC_DATABASE_PASSWORD"));
+        }
+        hikariConfig.setJdbcUrl(jbcUrl);
+        var dataSource = new HikariDataSource(hikariConfig);
+        var sql = getContent(getFile("schema.sql"));
+        try (var connection = dataSource.getConnection();
+             var stmt = connection.createStatement()) {
+            stmt.execute(sql);
+        }
+        BaseRepository.dataSource = dataSource;
+
+        var app = Javalin.create(config -> {
+            config.plugins.enableDevLogging();
+            JavalinJte.init(createTemplateEngine());
+        });
+
+        app.get(NamedRoutes.rootPath(), RootController.showMainPage);
+        app.post(NamedRoutes.urlsPath(), UrlController.createUrl);
+        app.get(NamedRoutes.urlsPath(), UrlController.listUrls);
+        app.get(NamedRoutes.urlPath("{id}"),  UrlController.show);
+        app.post(NamedRoutes.urlCheckPath("{id}"), UrlController.check);
+
+        return app;
     }
 
     private static TemplateEngine createTemplateEngine() {
@@ -64,36 +83,8 @@ public final class App {
         return templateEngine;
     }
 
-    public static Javalin getApp() throws IOException, SQLException {
-
-        var hikariConfig = new HikariConfig();
-        setData(hikariConfig);
-
-        var dataSource = new HikariDataSource(hikariConfig);
-
-        var inputStream = App.class.getClassLoader().getResourceAsStream("schema.sql");
-        var reader = new BufferedReader(new InputStreamReader(inputStream));
-        var sql = reader.lines().collect(Collectors.joining("\n"));
-
-        log.info(sql);
-        try (var connection = dataSource.getConnection();
-             var statement = connection.createStatement()) {
-            statement.execute(sql);
-        }
-        BaseRepository.dataSource = dataSource;
-
-        var app = Javalin.create(config -> {
-            config.plugins.enableDevLogging();
-        });
-
-        JavalinJte.init(createTemplateEngine());
-
-        app.get(NamedRoutes.rootPath(), RootController::index);
-        app.get(NamedRoutes.urlsPath(), UrlController::index);
-        app.get(NamedRoutes.urlPath("{id}"), UrlController::show);
-        app.post(NamedRoutes.urlsPath(), UrlController::create);
-        app.post(NamedRoutes.urlChecksPath("{id}"), UrlCheckController::create);
-
-        return app;
+    public static void main(String[] args) throws IOException, SQLException {
+        Javalin app = getApp();
+        app.start(getPort());
     }
 }
