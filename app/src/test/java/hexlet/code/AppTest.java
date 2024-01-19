@@ -138,6 +138,8 @@ public final class AppTest {
             assertThat(response.code()).isEqualTo(200);
 
             var urlCheck = UrlCheckRepository.getLastCheck(url.getId()).get();
+            var id = String.valueOf(urlCheck.getId());
+            var statusCode = String.valueOf(urlCheck.getStatusCode());
             var title = urlCheck.getTitle();
             var h1 = urlCheck.getH1();
             var description = urlCheck.getDescription();
