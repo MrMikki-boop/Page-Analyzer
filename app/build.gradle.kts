@@ -33,7 +33,7 @@ dependencies {
 
     // Логика приложения
     implementation("info.picocli:picocli:4.7.5")
-    implementation("org.slf4j:slf4j-simple:2.1.0-alpha1")
+    implementation ("org.slf4j:slf4j-api:1.7.32")
     implementation("io.javalin:javalin:5.6.3")
     implementation("io.javalin:javalin-bundle:5.6.3")
     implementation("io.javalin:javalin-rendering:5.6.3")
@@ -45,6 +45,7 @@ dependencies {
     implementation("com.konghq:unirest-java:4.0.0-RC2")
     implementation("org.jsoup:jsoup:1.17.2")
     implementation("org.postgresql:postgresql:42.2.5")
+    implementation ("ch.qos.logback:logback-classic:1.2.6")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
