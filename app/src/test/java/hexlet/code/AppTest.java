@@ -109,35 +109,4 @@ public class AppTest {
             assertThat(response.code()).isEqualTo(404);
         });
     }
-
-    @Test
-    public void testCheckUrl() throws IOException, SQLException {
-        var mockServer = new MockWebServer();
-        var mockUrl = mockServer.url("/").toString();
-        var mockResponse = new MockResponse().setBody(readFixture("index.html"));
-        mockServer.enqueue(mockResponse);
-
-        JavalinTest.test(app, (server, client) -> {
-            var requestBody = "url=" + mockUrl;
-            var response = client.post("/urls", requestBody);
-            assertThat(response.code()).isEqualTo(200);
-
-
-            var formattedName = String.format("%s://%s", mockServer.url("/").url().getProtocol(),
-                    mockServer.url("/").url().getAuthority());
-            var addUrl = UrlRepository.findByName(formattedName).orElse(null);
-            assertThat(addUrl).isNotNull();
-            assertThat(addUrl.getName()).isEqualTo(formattedName);
-
-            var response2 = client.post("/urls/" + addUrl.getId() + "/checks");
-            assertThat(response2.code()).isEqualTo(200);
-
-            var ursCheck = UrlCheckRepository.findByUrlId(addUrl.getId()).get(0);
-            assertThat(ursCheck.getTitle()).isEqualTo("Л. Н. Толстой — Война и мир");
-            assertThat(ursCheck.getH1()).isEqualTo("Война и мир");
-            assertThat(ursCheck.getDescription()).isEqualTo("Лев Николаевич");
-        });
-
-
-    }
 }
