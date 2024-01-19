@@ -1,9 +1,11 @@
 package hexlet.code;
 
 import hexlet.code.model.Url;
+import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
+import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +23,7 @@ public class AppTest {
     private Javalin app;
 
     private static Path getFixturePath(String fileName) {
-        return Paths.get("src", "test", "resources", "fixtures", fileName).toAbsolutePath().normalize();
+        return Paths.get("src", "test", "resources", fileName).toAbsolutePath().normalize();
     }
 
     private static String readFixture(String fileName) throws IOException {
@@ -105,6 +107,38 @@ public class AppTest {
             UrlRepository.destroy(25);
             var response = client.get("/urls/25");
             assertThat(response.code()).isEqualTo(404);
+        });
+    }
+
+    @Test
+    public void testCheckUrl() throws IOException, SQLException {
+        var mockServer = new MockWebServer();
+        var ckUrl = mockServer.url("/").toString();
+        var mockResponse = new MockResponse().setBody(readFixture("index.html"));
+        mockServer.enqueue(mockResponse);
+
+        JavalinTest.test(app, (server, client) -> {
+            var requestBody = "url=" + ckUrl;
+            var response = client.post("/urls", requestBody);
+            assertThat(response.code()).isEqualTo(200);
+
+            var formattedName = String.format("%s://%s", mockServer.url("/").url().getProtocol(),
+                    mockServer.url("/").url().getAuthority());
+            var addUrl = UrlRepository.findByName(formattedName).orElse(null);
+            assertThat(addUrl).isNotNull();
+            assertThat(addUrl.getName()).isEqualTo(formattedName);
+
+            var response2 = client.post("/urls/" + addUrl.getId() + "/checks");
+            assertThat(response2.code()).isEqualTo(200);
+
+            var ursCheck = UrlCheckRepository.findByUrlId(addUrl.getId()).get(0);
+            var title = ursCheck.getTitle();
+            var h1 = ursCheck.getH1();
+            var description = ursCheck.getDescription();
+
+            assertThat(title).isEqualTo("This is a title");
+            assertThat(h1).isEqualTo("This is a header");
+            assertThat(description).isEqualTo("This is a description");
         });
     }
 }
