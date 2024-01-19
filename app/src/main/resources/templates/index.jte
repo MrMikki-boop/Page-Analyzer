@@ -15,7 +15,7 @@ content = @`
                                 <div class="form-floating">
                                     <input id="url-input" autofocus type="text" required name="url" aria-label="url"
                                            class="form-control w-100" placeholder="link" autocomplete="off">
-                                    <label for="url-input">Link</label>
+                                    <label for="url-input">Put your link here</label>
                                 </div>
                             </div>
                             <div class="col-auto">
