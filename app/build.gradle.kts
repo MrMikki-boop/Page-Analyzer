@@ -44,6 +44,7 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.1")
     implementation("com.konghq:unirest-java:4.0.0-RC2")
     implementation("org.jsoup:jsoup:1.17.2")
+    implementation("org.postgresql:postgresql:42.2.5")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
