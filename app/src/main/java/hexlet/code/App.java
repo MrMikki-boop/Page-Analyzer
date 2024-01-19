@@ -1,11 +1,5 @@
 package hexlet.code;
 
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-
 import hexlet.code.controller.RootController;
 import hexlet.code.controller.UrlController;
 import hexlet.code.repository.BaseRepository;
@@ -14,10 +8,15 @@ import io.javalin.Javalin;
 import lombok.extern.slf4j.Slf4j;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
 import org.postgresql.Driver;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
@@ -29,7 +28,7 @@ public class App {
 
     private static int getPort() {
         String port = System.getenv().getOrDefault("PORT", "7070");
-        return Integer.valueOf(port);
+        return Integer.parseInt(port);
     }
 
     private static InputStream getFile(String fileName) {
@@ -44,23 +43,32 @@ public class App {
         }
     }
 
-    public static Javalin getApp() throws IOException, SQLException {
+    private static HikariConfig createHikariConfig() {
         var hikariConfig = new HikariConfig();
-        String jbcUrl = "jdbc:h2:mem:piafson;DB_CLOSE_DELAY=-1;";
+        String jdbcUrl = "jdbc:h2:mem:piafson;DB_CLOSE_DELAY=-1;";
         if (System.getenv("JDBC_DATABASE_URL") != null) {
             hikariConfig.setDriverClassName(Driver.class.getCanonicalName());
-            jbcUrl = System.getenv("JDBC_DATABASE_URL");
+            jdbcUrl = System.getenv("JDBC_DATABASE_URL");
             hikariConfig.setUsername(System.getenv("JDBC_DATABASE_USERNAME"));
             hikariConfig.setPassword(System.getenv("JDBC_DATABASE_PASSWORD"));
         }
-        hikariConfig.setJdbcUrl(jbcUrl);
-        var dataSource = new HikariDataSource(hikariConfig);
+        hikariConfig.setJdbcUrl(jdbcUrl);
+        return hikariConfig;
+    }
+
+    private static void initializeDatabase(HikariDataSource dataSource) throws SQLException, IOException {
         var sql = getContent(getFile("schema.sql"));
         try (var connection = dataSource.getConnection();
              var stmt = connection.createStatement()) {
             stmt.execute(sql);
         }
         BaseRepository.dataSource = dataSource;
+    }
+
+    public static Javalin getApp() throws IOException, SQLException {
+        var hikariConfig = createHikariConfig();
+        var dataSource = new HikariDataSource(hikariConfig);
+        initializeDatabase(dataSource);
 
         var app = Javalin.create(config -> {
             config.plugins.enableDevLogging();
