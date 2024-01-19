@@ -53,12 +53,19 @@ public class UrlRepository extends BaseRepository {
 
     public static Optional<Url> findByCriterion(String criterion, Object value) throws SQLException {
         String sql;
-        if ("id".equals(criterion)) {
-            sql = "SELECT * FROM urls WHERE id = ?";
-        } else if ("name".equals(criterion)) {
-            sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
-        } else {
-            throw new IllegalArgumentException("Invalid criterion: " + criterion);
+        String[] columns;
+
+        switch (criterion) {
+            case "id":
+                sql = "SELECT * FROM urls WHERE id = ?";
+                columns = new String[]{"id", "name", "created_at"};
+                break;
+            case "name":
+                sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
+                columns = new String[]{"id", "name", "created_at"};
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid criterion: " + criterion);
         }
 
         try (var connection = dataSource.getConnection();
@@ -82,6 +89,7 @@ public class UrlRepository extends BaseRepository {
             return Optional.empty();
         }
     }
+
 
     public static Optional<Url> find(long id) throws SQLException {
         return findByCriterion("id", id);
