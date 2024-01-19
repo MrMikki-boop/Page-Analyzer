@@ -63,7 +63,7 @@ public final class App {
         return TemplateEngine.create(codeResolver, ContentType.Html);
     }
 
-    public static Javalin getApp() throws IOException, SQLException {
+    public static Javalin getApp() throws SQLException {
 
         var hikariConfig = new HikariConfig();
         setData(hikariConfig);
