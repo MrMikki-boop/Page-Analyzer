@@ -14,7 +14,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
@@ -47,7 +46,7 @@ public final class AppTest {
         urlName = mockServer.url("/").toString();
         var mockResponse = new MockResponse().setBody(getContentOfHtmlFile());
         mockServer.enqueue(mockResponse);
-        mockServer.start();
+//        mockServer.start();
     }
 
     @BeforeEach
