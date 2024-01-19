@@ -6,15 +6,15 @@
 content = @`
     <div class="container-lg mt-5">
 
-        <h1>Сайты</h1>
+        <h1>Urls</h1>
 
         <table class="table table-bordered table-hover mt-3">
             <thead>
             <tr>
                 <th class="col-1">ID</th>
-                <th>Имя</th>
-                <th class="col-2">Последняя проверка</th>
-                <th class="col-1">Код ответа</th>
+                <th>Name</th>
+                <th class="col-2">Last Check</th>
+                <th class="col-1">Status Code</th>
             </tr>
             </thead>
             <tbody>
