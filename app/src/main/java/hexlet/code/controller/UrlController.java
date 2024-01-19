@@ -1,73 +1,102 @@
 package hexlet.code.controller;
 
-import hexlet.code.dto.urls.UrlPage;
-import hexlet.code.dto.urls.UrlsPage;
+import hexlet.code.dto.UrlPage;
+import hexlet.code.dto.UrlsPage;
 import hexlet.code.model.Url;
+import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
-import hexlet.code.util.NormalizedData;
-import hexlet.code.util.Time;
-import io.javalin.http.Context;
+import io.javalin.http.Handler;
 import io.javalin.http.NotFoundResponse;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-
-import java.sql.SQLException;
 import java.util.Collections;
 
-public final class UrlController {
-    public static void index(Context ctx) throws SQLException {
-        var urls = UrlRepository.getEntities();
-        var checks = NormalizedData.getListOfLastChecks();
-        var page = new UrlsPage(urls, checks);
-        page.setFlash(ctx.consumeSessionAttribute("flash"));
-        page.setFlashType(ctx.consumeSessionAttribute("flash-type"));
-        ctx.render("urls/index.jte", Collections.singletonMap("page", page));
-    }
+public class UrlController {
 
-    public static void show(Context ctx) throws SQLException {
-        var id = ctx.pathParamAsClass("id", Long.class).get();
-        var url = UrlRepository.find(id)
-                .orElseThrow(() -> new NotFoundResponse("Entity with id = " + id + " not found"));
-        var urlChecks = UrlCheckRepository.getEntitiesById(id);
-        var page = new UrlPage(id, url.getName(), url.getCreatedAt(), urlChecks);
-        page.setFlash(ctx.consumeSessionAttribute("flash"));
-        page.setFlashType(ctx.consumeSessionAttribute("flash-type"));
-        ctx.render("urls/show.jte", Collections.singletonMap("page", page));
-    }
-
-    public static void create(Context ctx) throws SQLException {
-        var input = ctx.formParamAsClass("url", String.class)
-                .get()
-                .toLowerCase()
-                .trim();
-
-        String normalizedURL;
-
+    public static Handler createUrl = ctx -> {
+        String receivedUrl = ctx.formParam("url");
+        URL url;
         try {
-            URL parsedUrl = new URI(input).toURL();
-            normalizedURL = NormalizedData.getNormalizedURL(parsedUrl);
-        } catch (MalformedURLException | URISyntaxException | IllegalArgumentException e) {
-            ctx.sessionAttribute("flash", "Incorrect URL");
-            ctx.sessionAttribute("flash-type", "warning");
+            url = new URL(receivedUrl);
+        } catch (MalformedURLException e) {
+            ctx.sessionAttribute("flash", "Некорректный URL");
+            ctx.sessionAttribute("flashType", "alert-danger");
+            ctx.redirect(NamedRoutes.rootPath());
+            return;
+        }
+        String name = String.format("%s://%s", url.getProtocol(), url.getAuthority());
+
+        if (UrlRepository.checkUrlExist(name)) {
+            ctx.sessionAttribute("flash", "Страница уже существует");
+            ctx.sessionAttribute("flashType", "alert-danger");
             ctx.redirect(NamedRoutes.rootPath());
             return;
         }
 
-        if (UrlRepository.doesUrlExist(normalizedURL)) {
-            ctx.sessionAttribute("flash", "This page already exist");
-            ctx.sessionAttribute("flash-type", "info");
-            ctx.redirect(NamedRoutes.urlsPath());
-        } else {
-            var url = new Url(normalizedURL, Time.getCurrentTime());
-            UrlRepository.save(url);
-            ctx.sessionAttribute("flash", "Page added successfully");
-            ctx.sessionAttribute("flash-type", "success");
-            ctx.redirect(NamedRoutes.urlsPath());
+        Url newUrl = new Url(name);
+        UrlRepository.save(newUrl);
+        ctx.sessionAttribute("flash", "Страница успешно добавлена");
+        ctx.sessionAttribute("flashType", "alert-success");
+        ctx.redirect(NamedRoutes.urlsPath());
+    };
+
+    public static Handler listUrls = ctx -> {
+        var urls = UrlRepository.findAll();
+        var urlChecks = UrlCheckRepository.getLastCheck();
+        var page = new UrlsPage(urls, urlChecks);
+        page.setFlash(ctx.consumeSessionAttribute("flash"));
+        page.setFlashType(ctx.consumeSessionAttribute("flashType"));
+        ctx.render("allUrls.jte", Collections.singletonMap("page", page));
+    };
+
+    public static Handler show = ctx -> {
+        var urlId = ctx.pathParamAsClass("id", Long.class).get();
+        var url = UrlRepository.find(urlId).orElseThrow(() -> new NotFoundResponse("Url not found"));
+        var urlChecks = UrlCheckRepository.findByUrlId(urlId);
+        var page = new UrlPage(url, urlChecks);
+        page.setFlash(ctx.consumeSessionAttribute("flash"));
+        page.setFlashType(ctx.consumeSessionAttribute("flashType"));
+        ctx.render("show.jte", Collections.singletonMap("page", page));
+    };
+
+    public static Handler check = ctx -> {
+        long urlId = ctx.pathParamAsClass("id", Long.class).get();
+        var url = UrlRepository.find(urlId).get().getName();
+        HttpResponse<String> response;
+        try {
+            response = Unirest.get(url).asString();
+            var body = response.getBody();
+            Document doc = Jsoup.parse(body);
+            var statusCode = response.getStatus();
+            var title = doc.title();
+            Element h1Temp = doc.selectFirst("h1");
+            String h1 = h1Temp == null ? null : h1Temp.text();
+            Element descriptionTemp = doc.selectFirst("meta[name=description]");
+            String description = descriptionTemp == null ? null : descriptionTemp.attr("content");
+
+            UrlCheck urlCheck = new UrlCheck(statusCode, title, h1, description);
+            urlCheck.setUrlId(urlId);
+            UrlCheckRepository.save(urlCheck);
+
+            ctx.sessionAttribute("flash", "Страница успешно проверена");
+            ctx.sessionAttribute("flashType", "alert-success");
+        } catch (UnirestException e) {
+            ctx.sessionAttribute("flash", "Connect to " + url + " failed");
+            ctx.sessionAttribute("flashType", "alert-danger");
+            ctx.redirect(NamedRoutes.urlPath(urlId));
+        } catch (Exception e) {
+            ctx.sessionAttribute("flash", e.getMessage());
+            ctx.sessionAttribute("flashType", "alert-danger");
         }
-    }
+        ctx.redirect(NamedRoutes.urlPath(urlId));
+    };
 }
