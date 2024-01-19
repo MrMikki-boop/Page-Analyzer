@@ -35,7 +35,7 @@ public final class App {
 
     public static int getPort() {
         String port = System.getenv().getOrDefault("PORT", PORT_DEFAULT);
-        return Integer.parseInt(port);
+        return Integer.valueOf(port);
     }
 
     public static String getJdbcUrl() {
@@ -82,7 +82,9 @@ public final class App {
         }
         BaseRepository.dataSource = dataSource;
 
-        var app = Javalin.create(config -> config.plugins.enableDevLogging());
+        var app = Javalin.create(config -> {
+            config.plugins.enableDevLogging();
+        });
 
         JavalinJte.init(createTemplateEngine());
 
