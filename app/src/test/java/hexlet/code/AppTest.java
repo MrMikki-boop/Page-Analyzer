@@ -46,11 +46,11 @@ public final class AppTest {
         urlName = mockServer.url("/").toString();
         var mockResponse = new MockResponse().setBody(getContentOfHtmlFile());
         mockServer.enqueue(mockResponse);
-        mockServer.start();
+//        mockServer.start();
     }
 
     @BeforeEach
-    public void beforeEach() throws SQLException {
+    public void beforeEach() throws SQLException, IOException {
         app = App.getApp();
     }
 
@@ -77,7 +77,7 @@ public final class AppTest {
     }
 
     @Test
-    public void testCreatePage() {
+    public void testCreatePage() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
             var requestBody = "url=https://www.example.com";
             var response = client.post(NamedRoutes.urlsPath(), requestBody);
@@ -101,7 +101,7 @@ public final class AppTest {
     }
 
     @Test
-    public void testCreateIncorrectPage() {
+    public void testCreateIncorrectPage() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
             var requestBody = "url=12345";
             var response = client.post(NamedRoutes.urlsPath(), requestBody);
@@ -129,7 +129,7 @@ public final class AppTest {
     }
 
     @Test
-    public void testCheckUrl() throws SQLException {
+    public void testCheckUrl() throws IOException, SQLException {
         var url = new Url(urlName, Time.getCurrentTime());
         UrlRepository.save(url);
 
@@ -138,6 +138,8 @@ public final class AppTest {
             assertThat(response.code()).isEqualTo(200);
 
             var urlCheck = UrlCheckRepository.getLastCheck(url.getId()).get();
+            var id = String.valueOf(urlCheck.getId());
+            var statusCode = String.valueOf(urlCheck.getStatusCode());
             var title = urlCheck.getTitle();
             var h1 = urlCheck.getH1();
             var description = urlCheck.getDescription();
