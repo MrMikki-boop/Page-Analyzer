@@ -4,9 +4,11 @@ plugins {
     id("checkstyle")
     id("jacoco")
 
+    id("io.freefair.lombok") version "8.4"
     id("com.adarshr.test-logger") version "4.0.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.18"
     id("com.github.ben-manes.versions") version "0.50.0"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "hexlet.code"
