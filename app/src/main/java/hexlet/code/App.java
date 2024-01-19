@@ -60,8 +60,7 @@ public final class App {
     private static TemplateEngine createTemplateEngine() {
         ClassLoader classLoader = App.class.getClassLoader();
         ResourceCodeResolver codeResolver = new ResourceCodeResolver("templates", classLoader);
-        TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Html);
-        return templateEngine;
+        return TemplateEngine.create(codeResolver, ContentType.Html);
     }
 
     public static Javalin getApp() throws IOException, SQLException {
@@ -72,6 +71,7 @@ public final class App {
         var dataSource = new HikariDataSource(hikariConfig);
 
         var inputStream = App.class.getClassLoader().getResourceAsStream("schema.sql");
+        assert inputStream != null;
         var reader = new BufferedReader(new InputStreamReader(inputStream));
         var sql = reader.lines().collect(Collectors.joining("\n"));
 
