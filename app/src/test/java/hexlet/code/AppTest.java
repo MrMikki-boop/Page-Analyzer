@@ -69,7 +69,11 @@ public class AppTest {
             var response = client.post(NamedRoutes.urlsPath(), requestBody);
             assertThat(response.code()).isEqualTo(200);
             assertThat(response.body().string()).contains("https://www.example.com");
-            assertThat(UrlRepository.findAll()).hasSize(1);
+
+            // Проверяем, что конкретная сущность появилась в БД
+            var createdUrl = UrlRepository.findByName("https://www.example.com");
+            assertThat(createdUrl).isPresent(); // Проверяем, что результат не пустой
+            assertThat(createdUrl.get().getName()).isEqualTo("https://www.example.com");
         });
     }
 
