@@ -65,7 +65,8 @@ public class UrlRepository extends BaseRepository {
         return processResultSet(sql, columns, criterion, value);
     }
 
-    private static Optional<Url> processResultSet(String sql, String[] columns, String criterion, Object value) throws SQLException {
+    private static Optional<Url> processResultSet(String sql, String[] columns, String criterion,
+                                                  Object value) throws SQLException {
         try (var connection = dataSource.getConnection();
              var preparedStatement = connection.prepareStatement(sql)) {
 
@@ -79,7 +80,8 @@ public class UrlRepository extends BaseRepository {
         }
     }
 
-    private static void setPreparedStatementParameters(PreparedStatement preparedStatement, String criterion, Object value) throws SQLException {
+    private static void setPreparedStatementParameters(PreparedStatement preparedStatement,
+                                                       String criterion, Object value) throws SQLException {
         if ("id".equals(criterion)) {
             preparedStatement.setLong(1, (Long) value);
         } else if ("name".equals(criterion)) {
