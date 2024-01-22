@@ -1,5 +1,6 @@
 package hexlet.code;
 
+import com.zaxxer.hikari.HikariDataSource;
 import hexlet.code.model.Url;
 import hexlet.code.repository.BaseRepository;
 import hexlet.code.repository.UrlCheckRepository;
@@ -45,6 +46,7 @@ public class AppTest {
     @Test
     public void testDataSourceExists() {
         assertThat(BaseRepository.dataSource).isNotNull();
+        assertThat(BaseRepository.dataSource).isInstanceOf(HikariDataSource.class);
     }
 
     @Test
