@@ -1,6 +1,7 @@
 package hexlet.code;
 
 import hexlet.code.model.Url;
+import hexlet.code.repository.BaseRepository;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
@@ -39,6 +40,11 @@ public class AppTest {
     @BeforeEach
     public final void setApp() throws IOException, SQLException {
         app = App.getApp();
+    }
+
+    @Test
+    public void testDataSourceExists() {
+        assertThat(BaseRepository.dataSource).isNotNull();
     }
 
     @Test
