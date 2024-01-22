@@ -2,6 +2,8 @@ package hexlet.code.repository;
 
 import hexlet.code.model.Url;
 
+    import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -60,28 +62,42 @@ public class UrlRepository extends BaseRepository {
 
         String[] columns = {"id", "name", "created_at"};
 
+        return executeFindQuery(criterion, value, sql, columns);
+    }
+
+    private static Optional<Url> executeFindQuery(String criterion, Object value, String sql, String[] columns) throws SQLException {
         try (var connection = dataSource.getConnection();
              var preparedStatement = connection.prepareStatement(sql)) {
 
-            if ("id".equals(criterion)) {
-                preparedStatement.setLong(1, (Long) value);
-            } else if ("name".equals(criterion)) {
-                preparedStatement.setString(1, (String) value);
-            }
+            setParametersForFindQuery(preparedStatement, criterion, value);
 
-            var resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                var id = resultSet.getLong("id");
-                var name = resultSet.getString("name");
-                var createdAt = resultSet.getTimestamp("created_at");
-                var url = new Url(name);
-                url.setId(id);
-                url.setCreatedAt(createdAt);
-                return Optional.of(url);
+            try (var resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToUrl(resultSet, columns);
+                }
+                return Optional.empty();
             }
-            return Optional.empty();
         }
     }
+
+    private static void setParametersForFindQuery(PreparedStatement preparedStatement, String criterion, Object value) throws SQLException {
+        if ("id".equals(criterion)) {
+            preparedStatement.setLong(1, (Long) value);
+        } else if ("name".equals(criterion)) {
+            preparedStatement.setString(1, (String) value);
+        }
+    }
+
+    private static Optional<Url> mapResultSetToUrl(ResultSet resultSet, String[] columns) throws SQLException {
+        var id = resultSet.getLong(columns[0]);
+        var name = resultSet.getString(columns[1]);
+        var createdAt = resultSet.getTimestamp(columns[2]);
+        var url = new Url(name);
+        url.setId(id);
+        url.setCreatedAt(createdAt);
+        return Optional.of(url);
+    }
+
 
     public static Optional<Url> find(long id) throws SQLException {
         return findByCriterion("id", id);
