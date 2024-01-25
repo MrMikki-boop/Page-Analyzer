@@ -3,10 +3,10 @@ package hexlet.code.repository;
 import hexlet.code.model.Url;
 
 import java.sql.ResultSet;
-import java.util.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +33,16 @@ public class UrlRepository extends BaseRepository {
         }
     }
 
+    private static Url mapResultSetToUrl(ResultSet resultSet) throws SQLException {
+        var id = resultSet.getLong("id");
+        var name = resultSet.getString("name");
+        var createdAt = resultSet.getTimestamp("created_at");
+        var url = new Url(name);
+        url.setId(id);
+        url.setCreatedAt(createdAt);
+        return url;
+    }
+
     public static List<Url> findAll() throws SQLException {
         String sql = "SELECT * FROM urls";
         try (var connection = dataSource.getConnection();
@@ -40,26 +50,10 @@ public class UrlRepository extends BaseRepository {
             var resultSet = preparedStatement.executeQuery();
             var result = new ArrayList<Url>();
             while (resultSet.next()) {
-                var id = resultSet.getLong("id");
-                var name = resultSet.getString("name");
-                var createdAt = resultSet.getTimestamp("created_at");
-                var url = new Url(name);
-                url.setId(id);
-                url.setCreatedAt(createdAt);
-                result.add(url);
+                result.add(mapResultSetToUrl(resultSet));
             }
             return result;
         }
-    }
-
-    private static Optional<Url> mapResultSetToUrl(ResultSet resultSet) throws SQLException {
-        var id = resultSet.getLong("id");
-        var name = resultSet.getString("name");
-        var createdAt = resultSet.getTimestamp("created_at");
-        var url = new Url(name);
-        url.setId(id);
-        url.setCreatedAt(createdAt);
-        return Optional.of(url);
     }
 
     public static Optional<Url> find(long id) throws SQLException {
@@ -68,7 +62,7 @@ public class UrlRepository extends BaseRepository {
              var preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setLong(1, id);
             var resultSet = preparedStatement.executeQuery();
-            return resultSet.next() ? mapResultSetToUrl(resultSet) : Optional.empty();
+            return resultSet.next() ? Optional.of(mapResultSetToUrl(resultSet)) : Optional.empty();
         }
     }
 
@@ -78,7 +72,7 @@ public class UrlRepository extends BaseRepository {
              var preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, name);
             var resultSet = preparedStatement.executeQuery();
-            return resultSet.next() ? mapResultSetToUrl(resultSet) : Optional.empty();
+            return resultSet.next() ? Optional.of(mapResultSetToUrl(resultSet)) : Optional.empty();
         }
     }
 
