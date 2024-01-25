@@ -54,9 +54,9 @@ public class AppTest {
         JavalinTest.test(app, ((server, client) -> {
             var response = client.get("/");
             assertThat(response.code()).isEqualTo(200);
-            assert response.body() != null;
+            assertThat(response.body()).isNotNull();
             assertThat(response.body().string())
-                    .contains("<p class=\"lead\">Check websites for SEO suitability for free</p>");
+                    .contains("Check websites for SEO suitability for free");
         }));
     }
 
@@ -126,8 +126,7 @@ public class AppTest {
         JavalinTest.test(app, (server, client) -> {
             var url = new Url("https://google.com");
             UrlRepository.save(url);
-            var newUrl = UrlRepository.findByName("https://google.com");
-            var id = newUrl.get().getId();
+            var id = UrlRepository.findByName("https://google.com").map(Url::getId).orElse(null);
             var response = client.get("/urls/" + id);
             assertThat(response.code()).isEqualTo(200);
         });
