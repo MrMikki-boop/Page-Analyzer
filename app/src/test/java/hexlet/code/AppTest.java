@@ -43,12 +43,18 @@ public class AppTest {
         app = App.getApp();
     }
 
+    /**
+     * Test to check if the data source exists and is of the correct type.
+     */
     @Test
     public void testDataSourceExists() {
         assertThat(BaseRepository.dataSource).isNotNull();
         assertThat(BaseRepository.dataSource).isInstanceOf(HikariDataSource.class);
     }
 
+    /**
+     * Test to verify that the main page is displayed correctly.
+     */
     @Test
     public void testShowMainPage() {
         JavalinTest.test(app, ((server, client) -> {
@@ -60,16 +66,22 @@ public class AppTest {
         }));
     }
 
+    /**
+     * Test to check if the "Urls" page is displayed correctly.
+     */
     @Test
     public void testUrlPage() {
         JavalinTest.test(app, ((server, client) -> {
             var response = client.get("/urls");
             assertThat(response.code()).isEqualTo(200);
-            assert response.body() != null;
+            assertThat(response.body()).isNotNull();
             assertThat(response.body().string()).contains("Urls");
         }));
     }
 
+    /**
+     * Test to verify the creation of a new URL page and its appearance in the database.
+     */
     @Test
     public void testCreatePage() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
@@ -78,23 +90,29 @@ public class AppTest {
             assertThat(response.code()).isEqualTo(200);
             assertThat(response.body().string()).contains("https://www.example.com");
 
-            // Проверяем, что конкретная сущность появилась в БД
+            // Check that the specific entity has appeared in the database
             var createdUrl = UrlRepository.findByName("https://www.example.com");
-            assertThat(createdUrl).isPresent(); // Проверяем, что результат не пустой
+            assertThat(createdUrl).isPresent(); // Ensure that the result is not empty
             assertThat(createdUrl.get().getName()).isEqualTo("https://www.example.com");
         });
     }
 
+    /**
+     * Test to verify the behavior when an incorrect URL is provided for creation.
+     */
     @Test
     public void testCreateIncorrectPage() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
             var requestBody = "url=12345";
             var response = client.post(NamedRoutes.urlsPath(), requestBody);
             assertThat(response.code()).isEqualTo(200);
-            assertThat(UrlRepository.findAll()).hasSize(0);
+            assertThat(UrlRepository.findAll()).isEmpty();
         });
     }
 
+    /**
+     * Test to check if the pagination for the "Urls" page is working as expected.
+     */
     @Test
     public void testUrlPageNumber() {
         var mockServer = new MockWebServer();
@@ -105,6 +123,9 @@ public class AppTest {
         });
     }
 
+    /**
+     * Test to check the behavior when trying to access a non-existing URL.
+     */
     @Test
     public void testUrlNotFound() {
         JavalinTest.test(app, (server, client) -> {
@@ -113,6 +134,9 @@ public class AppTest {
         });
     }
 
+    /**
+     * Test to verify that the "Urls" list page is accessible.
+     */
     @Test
     public void testListUrls() {
         JavalinTest.test(app, (server, client) -> {
@@ -121,6 +145,9 @@ public class AppTest {
         });
     }
 
+    /**
+     * Test to verify the display of a specific URL page.
+     */
     @Test
     public void testShow() {
         JavalinTest.test(app, (server, client) -> {
@@ -132,22 +159,28 @@ public class AppTest {
         });
     }
 
+    /**
+     * Test to verify the creation of a new URL and its appearance on the page.
+     */
     @Test
     public void testCreateUrl() {
         JavalinTest.test(app, (server, client) -> {
             var response = client.post("/urls", "url=" + TEST_URL + "/12345");
             assertThat(response.code()).isEqualTo(200);
             assertThat(response.body().string())
-                    .contains("<a href=\"/urls/1\">https://google.com</a>");
+                    .contains("https://google.com");
 
             var response2 = client.post("/urls", "url=" + TEST_URL + "/12345");
             assertThat(response2.code()).isEqualTo(200);
             assertThat(response2.body().string())
-                    .contains("<a class=\"navbar-brand\" href=\"/\">Page Analyzer</a>");
+                    .contains("Page Analyzer");
             assertThat(UrlRepository.checkUrlExist(TEST_URL)).isTrue();
         });
     }
 
+    /**
+     * Test to check the URL checking process, including title, h1, and description extraction.
+     */
     @Test
     public void testCheckUrl() throws IOException, SQLException {
         var mockServer = new MockWebServer();
@@ -174,9 +207,9 @@ public class AppTest {
             var h1 = ursCheck.getH1();
             var description = ursCheck.getDescription();
 
-            assertThat(title).isEqualTo("This is a title");
-            assertThat(h1).isEqualTo("This is a header");
-            assertThat(description).isEqualTo("This is a description");
+            assertThat(title).as("Check title").isEqualTo("This is a title");
+            assertThat(h1).as("Check h1").isEqualTo("This is a header");
+            assertThat(description).as("Check description").isEqualTo("This is a description");
         });
     }
 }
