@@ -2,7 +2,6 @@ package hexlet.code.repository;
 
 import hexlet.code.model.Url;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Date;
 import java.sql.SQLException;
@@ -53,62 +52,34 @@ public class UrlRepository extends BaseRepository {
         }
     }
 
-    public static Optional<Url> findByCriterion(String criterion, Object value) throws SQLException {
-        String sql = buildSql(criterion);
-        String[] columns = {"id", "name", "created_at"};
-
-        return processResultSet(sql, columns, criterion, value);
-    }
-
-    private static String buildSql(String criterion) {
-        return switch (criterion) {
-            case "id" -> "SELECT * FROM urls WHERE id = ?";
-            case "name" -> "SELECT id, name, created_at FROM urls WHERE name = ?";
-            // add more cases for additional criteria as needed
-            default -> throw new IllegalArgumentException("Invalid criterion: " + criterion);
-        };
-    }
-
-    private static Optional<Url> processResultSet(String sql, String[] columns, String criterion,
-                                                  Object value) throws SQLException {
-        try (var connection = dataSource.getConnection();
-             var preparedStatement = connection.prepareStatement(sql)) {
-
-            setPreparedStatementParameters(preparedStatement, criterion, value);
-
-            var resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                return Optional.of(mapResultSetToUrl(resultSet));
-            }
-            return Optional.empty();
-        }
-    }
-
-    private static void setPreparedStatementParameters(PreparedStatement preparedStatement,
-                                                       String criterion, Object value) throws SQLException {
-        if ("id".equals(criterion)) {
-            preparedStatement.setLong(1, (Long) value);
-        } else if ("name".equals(criterion)) {
-            preparedStatement.setString(1, (String) value);
-        }
-    }
-
-    private static Url mapResultSetToUrl(ResultSet resultSet) throws SQLException {
+    private static Optional<Url> mapResultSetToUrl(ResultSet resultSet) throws SQLException {
         var id = resultSet.getLong("id");
         var name = resultSet.getString("name");
         var createdAt = resultSet.getTimestamp("created_at");
         var url = new Url(name);
         url.setId(id);
         url.setCreatedAt(createdAt);
-        return url;
+        return Optional.of(url);
     }
 
     public static Optional<Url> find(long id) throws SQLException {
-        return findByCriterion("id", id);
+        String sql = "SELECT * FROM urls WHERE id = ?";
+        try (var connection = dataSource.getConnection();
+             var preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setLong(1, id);
+            var resultSet = preparedStatement.executeQuery();
+            return resultSet.next() ? mapResultSetToUrl(resultSet) : Optional.empty();
+        }
     }
 
     public static Optional<Url> findByName(String name) throws SQLException {
-        return findByCriterion("name", name);
+        String sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
+        try (var connection = dataSource.getConnection();
+             var preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, name);
+            var resultSet = preparedStatement.executeQuery();
+            return resultSet.next() ? mapResultSetToUrl(resultSet) : Optional.empty();
+        }
     }
 
     public static void destroy(long id) throws SQLException {
